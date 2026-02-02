@@ -1,5 +1,7 @@
 # Supabase config (contains API keys - keep secret!)
 config.js
+.env
+.env.local
 
 # Node modules (if you add package.json later)
 node_modules/
