@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <title>Startie – Logic Run</title>
+  <script type="module" crossorigin src="/assets/play-BAEg6pUj.js"></script>
+  <link rel="modulepreload" crossorigin href="/assets/modulepreload-polyfill-B5Qt9EMX.js">
+  <link rel="modulepreload" crossorigin href="/assets/player-session-Cwuz5rDI.js">
+  <link rel="stylesheet" crossorigin href="/assets/player-session-CNRYlH7w.css">
+</head>
+<body>
+  <div id="top-banner">
+    <div id="banner-wrapper">
+      <div id="banner-left"></div>
+      <div id="banner-center">
+        <img src="/top-banner.png" alt="StartSchool LOGIC RUN" id="banner-img">
+      </div>
+      <div id="banner-right"></div>
+    </div>
+  </div>
+
+  <!-- Mobile Header -->
+  <div id="mobile-header">
+    <div id="mobile-header-left">
+      <img src="/logoss.png" alt="StartSchool" id="mobile-logo">
+      <div id="mobile-header-title">LogicRun</div>
+    </div>
+    <div id="mobile-nav-buttons">
+      <button id="mobile-home-btn" class="mobile-nav-btn home" title="Home"></button>
+      <button id="mobile-prev-btn" class="mobile-nav-btn prev" title="Previous Level" disabled></button>
+      <button id="mobile-password-btn" class="mobile-nav-btn password" title="Enter Password">*</button>
+    </div>
+  </div>
+
+  <div id="game-container">
+    <div id="game">
+      <canvas id="canvas" width="600" height="300"></canvas>
+    </div>
+    
+    <div id="ui">
+      <div id="ui-header">
+        <strong id="level-title">Level 1</strong>
+        <span id="level-password"></span>
+        <div class="ui-header-right">
+          <span id="score">SCORE: 1000</span>
+          <button id="sound-toggle" title="Toggle Sound">🔊</button>
+        </div>
+      </div>
+      <div id="terminal-container">
+        <textarea id="terminal" spellcheck="false"></textarea>
+        <div id="terminal-drop-zone" class="empty"></div>
+      </div>
+      <button id="run">Run</button>
+      <div id="status"></div>
+    </div>
+    
+    <div id="highscores-panel">
+      <h2>HIGHSCORES</h2>
+      <div id="highscores-list"></div>
+    </div>
+  </div>
+
+  <div id="nav-buttons">
+    <button id="home-btn" class="nav-btn" title="Home"></button>
+    <button id="prev-btn" class="nav-btn" title="Previous Level"></button>
+    <button id="password-btn" class="nav-btn" title="Enter Password">*</button>
+  </div>
+
+  <!-- Mobile Command Palette -->
+  <div id="command-palette">
+    <button class="command-btn" draggable="true" data-command="move()">move()</button>
+    <button class="command-btn" draggable="true" data-command="spin(l)">spin(l)</button>
+    <button class="command-btn" draggable="true" data-command="spin(r)">spin(r)</button>
+    <button class="command-btn" draggable="true" data-command="jump()">jump()</button>
+    <button class="command-btn command-btn--while" draggable="true" data-command="while" id="while-btn" style="display: none;">while</button>
+  </div>
+
+  <!-- Mobile Highscores Modal (shown after level complete) -->
+  <div id="mobile-highscores-modal" class="modal">
+    <div class="modal-content">
+      <div class="modal-body">
+        <h2 class="modal-title">🏆 Leaderboard</h2>
+        <div id="mobile-highscores-list"></div>
+        <button id="mobile-highscores-continue" class="modal-btn modal-btn--primary">
+          Continue to Next Level
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modals container -->
+  <div id="modal-container"></div>
+
+</body>
+</html>

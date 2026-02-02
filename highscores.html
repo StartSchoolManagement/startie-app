@@ -3,15 +3,14 @@
 <head>
 <meta charset="UTF-8" />
 <title>Startie – Highscores</title>
-<link rel="stylesheet" href="style.css">
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<link rel="stylesheet" href="/style.css">
 </head>
 <body>
 <div id="top-banner">
   <div id="banner-wrapper">
     <div id="banner-left"></div>
     <div id="banner-center">
-      <img src="./assets/top-banner.png" alt="StartSchool LOGIC RUN" id="banner-img">
+      <img src="/top-banner.png" alt="StartSchool LOGIC RUN" id="banner-img">
     </div>
     <div id="banner-right"></div>
   </div>
@@ -19,19 +18,19 @@
 
 <div id="highscores-container">
   <div id="highscores-content">
-    <h1>HIGHSCORES</h1>
+    <h1>LEADERBOARD</h1>
     
-    <div id="score-entry" style="display: none;">
-      <h2>Enter Your Code</h2>
-      <p style="color: #888; margin-bottom: 20px;">Your total score: <strong id="total-score-display">0</strong></p>
-      <input type="text" id="player-code" placeholder="3 letters/numbers" maxlength="3" pattern="[A-Za-z0-9]{3}" style="text-transform: uppercase;">
-      <button id="submit-score">Submit</button>
-      <div id="code-error" style="color: #ff4444; margin-top: 10px; min-height: 20px;"></div>
+    <div id="player-status">
+      <p>
+        Playing as: <strong id="player-name"></strong>
+        <span id="player-score"></span>
+      </p>
     </div>
     
     <div id="leaderboard-display">
-      <h2>Top Scores</h2>
-      <div id="leaderboard-list"></div>
+      <div id="leaderboard-list">
+        <div class="leaderboard-loading">Loading...</div>
+      </div>
     </div>
     
     <div id="highscores-actions">
@@ -42,151 +41,88 @@
 </div>
 
 <script type="module">
-// Initialize Supabase
-import { initSupabase } from './utils/supabase.js';
-import { getCumulativeLeaderboard, saveCumulativeScore, getCurrentRunTotal, resetRunTotal } from './utils/leaderboard-supabase.js';
-import { saveMusicPosition } from './utils/sounds.js';
+import { initSupabase } from '/src/utils/supabase.ts';
+import { 
+  getPlayerSession, 
+  subscribeToLeaderboard
+} from '/src/utils/player-session.ts';
+import { saveMusicPosition } from '/src/utils/sounds.ts';
 
-// Wait for Supabase script to load, then initialize
-function waitForSupabase() {
-  return new Promise((resolve) => {
-    if (typeof window.supabase !== 'undefined') {
-      initSupabase();
-      resolve();
-    } else {
-      // Check every 100ms for Supabase to load
-      const checkInterval = setInterval(() => {
-        if (typeof window.supabase !== 'undefined') {
-          clearInterval(checkInterval);
-          initSupabase();
-          resolve();
-        }
-      }, 100);
-      
-      // Timeout after 5 seconds
-      setTimeout(() => {
-        clearInterval(checkInterval);
-        console.warn('Supabase script did not load within 5 seconds');
-        initSupabase(); // Try anyway
-        resolve();
-      }, 5000);
-    }
-  });
-}
+// Initialize
+initSupabase();
 
-// Initialize Supabase when page loads
-waitForSupabase();
-
-const scoreEntry = document.getElementById('score-entry');
-const playerCodeInput = document.getElementById('player-code');
-const submitScoreBtn = document.getElementById('submit-score');
-const codeError = document.getElementById('code-error');
-const totalScoreDisplay = document.getElementById('total-score-display');
 const leaderboardList = document.getElementById('leaderboard-list');
+const playerStatus = document.getElementById('player-status');
+const playerName = document.getElementById('player-name');
+const playerScore = document.getElementById('player-score');
 
-// Get total score from URL parameter or localStorage
-const urlParams = new URLSearchParams(window.location.search);
-const totalScore = urlParams.get('score') ? parseInt(urlParams.get('score'), 10) : getCurrentRunTotal();
-
-// Display total score
-totalScoreDisplay.textContent = totalScore.toLocaleString();
-
-// Show score entry if there's a score to submit
-if (totalScore > 0) {
-  scoreEntry.style.display = 'block';
+// Show current player status
+function showPlayerStatus(session) {
+  if (session) {
+    playerStatus.style.display = 'block';
+    playerName.textContent = session.username;
+    playerScore.textContent = `Score: ${session.score.toLocaleString()}`;
+  }
 }
 
-// Update leaderboard display (now async)
-async function updateLeaderboard() {
-  const leaderboard = await getCumulativeLeaderboard();
+// Check for existing session
+const session = getPlayerSession();
+if (session) {
+  showPlayerStatus(session);
+}
+
+// Update leaderboard display
+function updateLeaderboard(leaderboard) {
   leaderboardList.innerHTML = '';
   
-  if (leaderboard.length === 0) {
-    leaderboardList.innerHTML = '<p style="color: #888;">No scores yet. Be the first!</p>';
+  if (!leaderboard || leaderboard.length === 0) {
+    leaderboardList.innerHTML = '<p class="leaderboard-empty">No scores yet. Be the first to play!</p>';
     return;
   }
+  
+  const currentSession = getPlayerSession();
   
   leaderboard.forEach((entry, index) => {
     const entryDiv = document.createElement('div');
     entryDiv.className = 'highscore-entry';
+    const isCurrentPlayer = currentSession && entry.username === currentSession.username;
+    
+    // Medal for top 3
+    let medal = '';
+    if (index === 0) medal = '🥇';
+    else if (index === 1) medal = '🥈';
+    else if (index === 2) medal = '🥉';
+    
+    const codeClass = isCurrentPlayer ? 'highscore-code highscore-code--current' : 'highscore-code';
+    
     entryDiv.innerHTML = `
-      <span class="highscore-code">${entry.code}</span>
+      <span class="highscore-rank">${medal || '#' + (index + 1)}</span>
+      <span class="${codeClass}">${entry.username}</span>
+      <span class="highscore-level">Lv.${entry.current_level || '?'}</span>
       <span class="highscore-score">${entry.score.toLocaleString()}</span>
     `;
     leaderboardList.appendChild(entryDiv);
   });
 }
 
-// Submit score (now async)
-submitScoreBtn.onclick = async (e) => {
-  e.preventDefault(); // Prevent any default behavior
-  const code = playerCodeInput.value.trim().toUpperCase();
-  codeError.textContent = '';
-  
-  if (code.length !== 3) {
-    codeError.textContent = 'Code must be 3 characters';
-    return;
-  }
-  
-  if (!/^[A-Z0-9]{3}$/.test(code)) {
-    codeError.textContent = 'Code must be letters or numbers only';
-    return;
-  }
-  
-  // Disable button during submission
-  submitScoreBtn.disabled = true;
-  submitScoreBtn.textContent = 'Submitting...';
-  
-  try {
-    console.log('Submitting score:', code, totalScore);
-    const result = await saveCumulativeScore(code, totalScore);
-    console.log('Score submitted successfully:', result);
-    resetRunTotal();
-    scoreEntry.style.display = 'none';
-    await updateLeaderboard();
-    // Show success message briefly
-    codeError.style.color = '#4caf50';
-    codeError.textContent = 'Score submitted successfully!';
-    setTimeout(() => {
-      codeError.textContent = '';
-      codeError.style.color = '#ff4444';
-    }, 2000);
-  } catch (error) {
-    console.error('Error submitting score:', error);
-    codeError.textContent = `Error submitting score: ${error.message || 'Please try again.'}`;
-  } finally {
-    submitScoreBtn.disabled = false;
-    submitScoreBtn.textContent = 'Submit';
-  }
-};
-
-// Allow Enter key to submit
-playerCodeInput.addEventListener('keypress', (e) => {
-  if (e.key === 'Enter') {
-    submitScoreBtn.click();
-  }
-});
-
-// Auto-uppercase input
-playerCodeInput.addEventListener('input', (e) => {
-  e.target.value = e.target.value.toUpperCase();
-});
+// Subscribe to real-time updates
+const unsubscribe = subscribeToLeaderboard(updateLeaderboard);
 
 // Navigation
 document.getElementById('home-btn-highscore').onclick = () => {
   saveMusicPosition();
-  resetRunTotal();
-  window.location.href = 'index.html';
+  window.location.href = '/index.html';
 };
 
 document.getElementById('play-again-btn').onclick = () => {
   saveMusicPosition();
-  resetRunTotal();
-  window.location.href = 'levels/MVE.html';
+  window.location.href = '/play.html?level=1';
 };
 
-// Initialize
-updateLeaderboard();
+// Cleanup on unload
+window.addEventListener('beforeunload', () => {
+  unsubscribe();
+});
 </script>
 
 <style>
@@ -210,60 +146,47 @@ updateLeaderboard();
 #highscores-content h1 {
   color: var(--white);
   text-align: center;
-  margin-bottom: 2rem;
+  margin-bottom: 1.5rem;
   font-family: 'Courier New', monospace;
-  font-size: 2rem;
-}
-
-#highscores-content h2 {
-  color: var(--white);
-  margin-top: 0;
-  margin-bottom: 1rem;
-  font-family: 'Courier New', monospace;
-}
-
-#player-code {
-  width: 100%;
-  padding: 0.75rem;
-  margin: 1rem 0;
-  background: var(--black);
-  border: 1px solid #555;
-  color: var(--white);
-  font-family: 'Courier New', monospace;
-  font-size: 1.5rem;
-  text-align: center;
-  letter-spacing: 0.5rem;
-  text-transform: uppercase;
-}
-
-#player-code:focus {
-  outline: none;
-  border-color: var(--pink);
-}
-
-#submit-score {
-  width: 100%;
-  padding: 0.75rem;
-  background: var(--pink);
-  border: none;
-  color: var(--white);
-  font-weight: bold;
-  cursor: pointer;
-  font-family: 'Courier New', monospace;
-  font-size: 1rem;
-  margin-top: 1rem;
-}
-
-#submit-score:hover {
-  background: #ff6fb8;
+  font-size: 1.8rem;
 }
 
 #leaderboard-list {
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
-  margin: 2rem 0;
-  min-height: 200px;
+  margin: 1.5rem 0;
+  min-height: 300px;
+}
+
+.highscore-entry {
+  display: flex;
+  align-items: center;
+  padding: 10px 15px;
+  background: var(--dark-gray);
+  border-radius: 4px;
+  font-family: 'Courier New', monospace;
+}
+
+.highscore-rank {
+  width: 40px;
+  font-size: 1.1em;
+}
+
+.highscore-code {
+  flex: 1;
+  color: var(--white);
+  font-size: 1.1em;
+}
+
+.highscore-level {
+  margin-right: 15px;
+}
+
+.highscore-score {
+  color: var(--pink);
+  font-weight: bold;
+  font-size: 1.1em;
 }
 
 #highscores-actions {
@@ -282,6 +205,7 @@ updateLeaderboard();
   cursor: pointer;
   font-family: 'Courier New', monospace;
   font-size: 1rem;
+  border-radius: 4px;
 }
 
 .highscore-btn:hover {

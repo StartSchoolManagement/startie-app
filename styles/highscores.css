@@ -1,0 +1,115 @@
+/* Highscores Panel */
+
+#highscores-panel {
+  flex: 0 0 200px;
+  display: flex;
+  flex-direction: column;
+  padding: 1rem;
+  background: var(--ui-gray);
+  border-left: 2px solid #555;
+  overflow-y: auto;
+}
+
+#highscores-panel h2 {
+  color: var(--white);
+  font-family: 'Courier New', monospace;
+  font-size: 1rem;
+  margin: 0 0 1rem 0;
+  text-align: center;
+}
+
+#highscores-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.highscore-entry {
+  display: flex;
+  justify-content: space-between;
+  font-family: 'Courier New', monospace;
+  font-size: 0.85rem;
+  color: var(--white);
+}
+
+.highscore-rank {
+  color: #888;
+  margin-right: 8px;
+}
+
+.highscore-rank--top {
+  color: var(--pink);
+}
+
+.highscore-code {
+  color: var(--white);
+}
+
+.highscore-code--current {
+  color: var(--white);
+  font-weight: bold;
+}
+
+.highscore-score {
+  color: var(--pink);
+}
+
+.highscore-empty {
+  color: #888;
+  font-size: 0.8rem;
+  text-align: center;
+  padding: 1rem;
+}
+
+/* Highscores Page Leaderboard */
+.highscore-level {
+  color: #888;
+  font-size: 0.8em;
+}
+
+.leaderboard-loading {
+  color: #888;
+  text-align: center;
+  padding: 2rem;
+}
+
+.leaderboard-empty {
+  color: #888;
+  text-align: center;
+  padding: 2rem;
+}
+
+/* Player status bar */
+#player-status {
+  margin-bottom: 20px;
+  padding: 15px;
+  background: var(--dark-gray);
+  border-radius: 4px;
+  display: none;
+}
+
+#player-status p {
+  margin: 0;
+  color: #888;
+  font-size: 14px;
+}
+
+#player-name {
+  color: var(--pink);
+}
+
+#player-score {
+  float: right;
+}
+
+/* UI header styles */
+#level-password {
+  font-size: 14px;
+  color: #888;
+  margin-left: 10px;
+}
+
+.ui-header-right {
+  display: flex;
+  align-items: center;
+}

@@ -1,0 +1,26 @@
+/* Base Styles & Variables */
+
+:root {
+  --pink: #ff4fa3;
+  --blue: #4fa3ff;
+  --black: #111;
+  --white: #fff;
+  --dark-gray: #2a2a2a;
+  --ui-gray: #3a3a3a;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  font-family: 'Courier New', monospace;
+  background: #000;
+  color: var(--white);
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}

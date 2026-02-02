@@ -1,0 +1,60 @@
+/* Navigation Buttons */
+
+#nav-buttons {
+  position: fixed;
+  bottom: 20px;
+  left: 20px;
+  display: flex;
+  gap: 10px;
+  z-index: 1000;
+}
+
+.nav-btn {
+  width: 48px;
+  height: 48px;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+  border-radius: 4px;
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
+}
+
+#home-btn {
+  background-color: var(--pink);
+  background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="black"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>');
+}
+
+#prev-btn {
+  background-color: #0f00ff;
+  background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="black"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg>');
+}
+
+#password-btn {
+  background-color: var(--white);
+  color: var(--black);
+  font-size: 3rem;
+  font-weight: bold;
+}
+
+.nav-btn:hover:not(:disabled) {
+  opacity: 0.8;
+  transform: scale(1.05);
+}
+
+#home-btn:hover:not(:disabled) {
+  background-color: #ff6fb8;
+}
+
+#prev-btn:hover:not(:disabled) {
+  background-color: #4a8fff;
+}
+
+.nav-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}

@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin - Startie</title>
+  <style>
+    :root {
+      --black: #000;
+      --green: #0f0;
+      --white: #fff;
+      --gray: #333;
+      --pink: #ff6fb8;
+      --red: #c00;
+    }
+    * { box-sizing: border-box; }
+    body {
+      background: var(--black);
+      color: var(--white);
+      font-family: 'Courier New', monospace;
+      margin: 0;
+      padding: 1rem;
+    }
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 2px solid var(--green);
+      padding-bottom: 1rem;
+      margin-bottom: 1rem;
+    }
+    h1 { color: var(--green); margin: 0; }
+    h2 { color: var(--pink); margin: 1.5rem 0 1rem 0; font-size: 1.2rem; }
+    .logout-btn {
+      background: var(--red);
+      color: white;
+      border: none;
+      padding: 0.5rem 1rem;
+      font-family: inherit;
+      cursor: pointer;
+    }
+    .stats {
+      display: flex;
+      gap: 1rem;
+      flex-wrap: wrap;
+      margin-bottom: 1.5rem;
+    }
+    .stat-box {
+      background: var(--gray);
+      border: 1px solid var(--green);
+      padding: 1rem;
+      min-width: 120px;
+    }
+    .stat-box h3 {
+      color: var(--green);
+      margin: 0 0 0.5rem 0;
+      font-size: 0.75rem;
+    }
+    .stat-box .value {
+      font-size: 1.4rem;
+      font-weight: bold;
+    }
+    .tabs {
+      display: flex;
+      gap: 0;
+      margin-bottom: 1rem;
+    }
+    .tab {
+      background: var(--gray);
+      border: 1px solid var(--green);
+      color: var(--white);
+      padding: 0.75rem 1.5rem;
+      font-family: inherit;
+      cursor: pointer;
+      border-right: none;
+    }
+    .tab:last-child { border-right: 1px solid var(--green); }
+    .tab.active {
+      background: var(--green);
+      color: var(--black);
+    }
+    .filters {
+      display: flex;
+      gap: 1rem;
+      margin-bottom: 1rem;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+    .filters input, .filters select {
+      background: var(--gray);
+      border: 1px solid var(--green);
+      color: var(--white);
+      padding: 0.5rem;
+      font-family: inherit;
+    }
+    .filters input[type="date"] {
+      color-scheme: dark;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 1rem;
+    }
+    th, td {
+      border: 1px solid var(--gray);
+      padding: 0.5rem;
+      text-align: left;
+      font-size: 0.9rem;
+    }
+    th {
+      background: var(--gray);
+      color: var(--green);
+      cursor: pointer;
+    }
+    th:hover { background: #444; }
+    tr:hover { background: rgba(0,255,0,0.1); }
+    .consent-yes { color: var(--green); }
+    .consent-no { color: #888; }
+    .btn {
+      background: var(--gray);
+      border: 1px solid var(--green);
+      color: var(--white);
+      padding: 0.3rem 0.6rem;
+      font-family: inherit;
+      cursor: pointer;
+      font-size: 0.8rem;
+    }
+    .btn:hover { background: #444; }
+    .btn--danger {
+      border-color: var(--red);
+      color: var(--red);
+    }
+    .btn--danger:hover {
+      background: var(--red);
+      color: var(--white);
+    }
+    .btn--primary {
+      background: var(--green);
+      color: var(--black);
+      font-weight: bold;
+    }
+    .btn--warning {
+      background: #f90;
+      color: var(--black);
+      border-color: #f90;
+    }
+    .action-bar {
+      display: flex;
+      gap: 1rem;
+      margin-bottom: 1rem;
+      padding: 1rem;
+      background: var(--gray);
+      border: 1px solid var(--green);
+    }
+    .login-form {
+      max-width: 300px;
+      margin: 100px auto;
+      padding: 2rem;
+      border: 2px solid var(--green);
+    }
+    .login-form h2 { color: var(--green); margin-top: 0; }
+    .login-form input {
+      width: 100%;
+      background: var(--gray);
+      border: 1px solid var(--green);
+      color: var(--white);
+      padding: 0.75rem;
+      margin-bottom: 1rem;
+      font-family: inherit;
+    }
+    .login-form button {
+      width: 100%;
+      background: var(--green);
+      color: var(--black);
+      border: none;
+      padding: 0.75rem;
+      font-family: inherit;
+      font-weight: bold;
+      cursor: pointer;
+    }
+    .error { color: #f66; margin-bottom: 1rem; }
+    .hidden { display: none !important; }
+    .section { display: none; }
+    .section.active { display: block; }
+    .confirm-modal {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.8);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+    }
+    .confirm-modal-content {
+      background: var(--gray);
+      border: 2px solid var(--green);
+      padding: 2rem;
+      max-width: 400px;
+      text-align: center;
+    }
+    .confirm-modal-content h3 {
+      color: var(--green);
+      margin-top: 0;
+    }
+    .confirm-modal-content .btn-group {
+      display: flex;
+      gap: 1rem;
+      margin-top: 1.5rem;
+      justify-content: center;
+    }
+    .empty-message {
+      text-align: center;
+      padding: 2rem;
+      color: #666;
+    }
+  </style>
+  <script type="module" crossorigin src="/assets/admin-CFX2PqHH.js"></script>
+  <link rel="modulepreload" crossorigin href="/assets/modulepreload-polyfill-B5Qt9EMX.js">
+</head>
+<body>
+  <!-- Login Form -->
+  <div id="login-section" class="login-form">
+    <h2>🔒 Admin Login</h2>
+    <div id="login-error" class="error hidden"></div>
+    <input type="email" id="email" placeholder="Email">
+    <input type="password" id="password" placeholder="Password">
+    <button id="login-btn">Login</button>
+  </div>
+
+  <!-- Admin Dashboard -->
+  <div id="admin-section" class="hidden">
+    <div class="header">
+      <h1>📊 Startie Admin</h1>
+      <button class="logout-btn" id="logout-btn">Logout</button>
+    </div>
+
+    <div class="stats" id="stats"></div>
+
+    <!-- Tabs -->
+    <div class="tabs">
+      <button class="tab active" data-tab="users">👥 Users</button>
+      <button class="tab" data-tab="scores">🏆 Highscores</button>
+    </div>
+
+    <!-- Users Section -->
+    <div id="users-section" class="section active">
+      <div class="filters">
+        <input type="text" id="user-search" placeholder="Search name/email...">
+        <select id="consent-filter">
+          <option value="">All Consent</option>
+          <option value="true">Consented</option>
+          <option value="false">Not Consented</option>
+        </select>
+        <input type="date" id="user-date-from" placeholder="From date">
+        <input type="date" id="user-date-to" placeholder="To date">
+        <button class="btn" id="export-users-btn">📥 Export CSV</button>
+      </div>
+
+      <table>
+        <thead>
+          <tr>
+            <th data-sort="name">Name</th>
+            <th data-sort="username">Username</th>
+            <th data-sort="email">Email</th>
+            <th data-sort="consent">Consent</th>
+            <th data-sort="created_at">Registered</th>
+          </tr>
+        </thead>
+        <tbody id="users-table-body"></tbody>
+      </table>
+    </div>
+
+    <!-- Scores Section -->
+    <div id="scores-section" class="section">
+      <div class="action-bar">
+        <button class="btn btn--warning" id="clear-scores-btn">⚠️ Clear All Highscores</button>
+        <span style="color: #888; font-size: 0.85rem;">
+          This deletes all score entries but keeps user accounts (name, email, consent).
+        </span>
+      </div>
+
+      <div class="filters">
+        <input type="text" id="score-search" placeholder="Search username...">
+        <input type="date" id="score-date-from" placeholder="From date">
+        <input type="date" id="score-date-to" placeholder="To date">
+      </div>
+
+      <table>
+        <thead>
+          <tr>
+            <th data-sort="username">Username</th>
+            <th data-sort="name">Name</th>
+            <th data-sort="score">Score</th>
+            <th data-sort="current_level">Level</th>
+            <th data-sort="created_at">Date</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody id="scores-table-body"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Confirmation Modal -->
+  <div id="confirm-modal" class="confirm-modal hidden">
+    <div class="confirm-modal-content">
+      <h3 id="confirm-title">Confirm Action</h3>
+      <p id="confirm-message">Are you sure?</p>
+      <div class="btn-group">
+        <button class="btn" id="confirm-cancel">Cancel</button>
+        <button class="btn btn--danger" id="confirm-ok">Confirm</button>
+      </div>
+    </div>
+  </div>
+
+</body>
+</html>

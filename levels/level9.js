@@ -28,3 +28,9 @@ export const level9 = {
   levelNumber: 9
 };
 
+let me ={
+  name: "Elis",
+  surname: "frelis",
+  age: 13
+}
+console.log(me)

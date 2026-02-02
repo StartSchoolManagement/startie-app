@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>Startie – Highscores</title>
+  <script type="module" crossorigin src="/assets/highscores-B-hxiJ5T.js"></script>
+  <link rel="modulepreload" crossorigin href="/assets/modulepreload-polyfill-B5Qt9EMX.js">
+  <link rel="modulepreload" crossorigin href="/assets/player-session-Cwuz5rDI.js">
+  <link rel="stylesheet" crossorigin href="/assets/player-session-CNRYlH7w.css">
+</head>
+<body>
+<div id="top-banner">
+  <div id="banner-wrapper">
+    <div id="banner-left"></div>
+    <div id="banner-center">
+      <img src="/top-banner.png" alt="StartSchool LOGIC RUN" id="banner-img">
+    </div>
+    <div id="banner-right"></div>
+  </div>
+</div>
+
+<div id="highscores-container">
+  <div id="highscores-content">
+    <h1>LEADERBOARD</h1>
+    
+    <div id="player-status">
+      <p>
+        Playing as: <strong id="player-name"></strong>
+        <span id="player-score"></span>
+      </p>
+    </div>
+    
+    <div id="leaderboard-display">
+      <div id="leaderboard-list">
+        <div class="leaderboard-loading">Loading...</div>
+      </div>
+    </div>
+    
+    <div id="highscores-actions">
+      <button id="home-btn-highscore" class="highscore-btn">Home</button>
+      <button id="play-again-btn" class="highscore-btn">Play Again</button>
+    </div>
+  </div>
+</div>
+
+
+<style>
+#highscores-container {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 2rem;
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+#highscores-content {
+  width: 100%;
+  background: var(--ui-gray);
+  padding: 2rem;
+  border: 2px solid var(--pink);
+}
+
+#highscores-content h1 {
+  color: var(--white);
+  text-align: center;
+  margin-bottom: 1.5rem;
+  font-family: 'Courier New', monospace;
+  font-size: 1.8rem;
+}
+
+#leaderboard-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin: 1.5rem 0;
+  min-height: 300px;
+}
+
+.highscore-entry {
+  display: flex;
+  align-items: center;
+  padding: 10px 15px;
+  background: var(--dark-gray);
+  border-radius: 4px;
+  font-family: 'Courier New', monospace;
+}
+
+.highscore-rank {
+  width: 40px;
+  font-size: 1.1em;
+}
+
+.highscore-code {
+  flex: 1;
+  color: var(--white);
+  font-size: 1.1em;
+}
+
+.highscore-level {
+  margin-right: 15px;
+}
+
+.highscore-score {
+  color: var(--pink);
+  font-weight: bold;
+  font-size: 1.1em;
+}
+
+#highscores-actions {
+  display: flex;
+  gap: 1rem;
+  margin-top: 2rem;
+}
+
+.highscore-btn {
+  flex: 1;
+  padding: 0.75rem;
+  background: var(--pink);
+  border: none;
+  color: var(--white);
+  font-weight: bold;
+  cursor: pointer;
+  font-family: 'Courier New', monospace;
+  font-size: 1rem;
+  border-radius: 4px;
+}
+
+.highscore-btn:hover {
+  background: #ff6fb8;
+}
+</style>
+</body>
+</html>
+

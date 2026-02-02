@@ -1,0 +1,38 @@
+/* Banner & Header Styles */
+
+#top-banner {
+  background: #000;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 10px;
+  
+}
+
+#banner-wrapper {
+  display: flex;
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+#banner-left {
+  flex: 1;
+}
+
+#banner-center {
+  flex: 0 0 auto;
+  display: flex;
+  justify-content: center;
+}
+
+#banner-right {
+  flex: 1;
+}
+
+#banner-img {
+  max-width: 80%;
+  height: auto;
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+}

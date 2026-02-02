@@ -1,0 +1,65 @@
+/* Terminal Styles */
+
+#terminal-container {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  background: var(--black);
+  border: 1px solid #555;
+  padding: 0;
+  position: relative;
+  min-height: 0;
+}
+
+#terminal {
+  flex: 1;
+  background: var(--black);
+  color: #0f0;
+  border: none;
+  padding: 0.5rem;
+  font-family: 'Courier New', monospace;
+  font-size: 0.9rem;
+  resize: none;
+  outline: none;
+  overflow-y: auto;
+  white-space: pre;
+  min-height: 0;
+}
+
+#terminal::before {
+  content: '';
+  position: absolute;
+  left: 0.5rem;
+  top: 0.5rem;
+  bottom: 0.5rem;
+  width: 1rem;
+  pointer-events: none;
+  background: linear-gradient(to right, var(--black) 0%, transparent 100%);
+  z-index: 1;
+}
+
+.terminal-line {
+  position: relative;
+  padding-left: 1rem;
+}
+
+.terminal-line::before {
+  content: '>';
+  position: absolute;
+  left: 0;
+  color: #0f0;
+  pointer-events: none;
+}
+
+#terminal::-webkit-scrollbar {
+  width: 8px;
+}
+
+#terminal::-webkit-scrollbar-track {
+  background: var(--black);
+}
+
+#terminal::-webkit-scrollbar-thumb {
+  background: #555;
+  border-radius: 4px;
+}

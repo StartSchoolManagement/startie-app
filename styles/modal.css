@@ -1,0 +1,270 @@
+/* Modal Styles */
+
+.modal {
+  display: none;
+  position: fixed;
+  z-index: 2000;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.8);
+}
+
+.modal-content {
+  background-color: var(--ui-gray);
+  margin: 5% auto;
+  padding: 2rem;
+  border: 2px solid var(--pink);
+  width: 90%;
+  max-width: 400px;
+  position: relative;
+}
+
+.modal-content--wide {
+  max-width: 500px;
+}
+
+.modal-content--medium {
+  max-width: 450px;
+}
+
+.close {
+  color: var(--white);
+  float: right;
+  font-size: 28px;
+  font-weight: bold;
+  cursor: pointer;
+  position: absolute;
+  right: 15px;
+  top: 10px;
+}
+
+.close:hover {
+  color: var(--pink);
+}
+
+.modal-content h2 {
+  color: var(--white);
+  margin-top: 0;
+  font-family: 'Courier New', monospace;
+}
+
+/* Modal body sections */
+.modal-body {
+  text-align: center;
+  padding: 20px;
+}
+
+.modal-body--compact {
+  padding: 0;
+}
+
+.modal-body--spacious {
+  padding: 30px;
+}
+
+/* Modal text */
+.modal-title {
+  color: var(--white);
+  margin-bottom: 15px;
+}
+
+.modal-title--tight {
+  margin-bottom: 10px;
+}
+
+.modal-text {
+  color: var(--white);
+  font-size: 16px;
+  line-height: 1.6;
+}
+
+.modal-text--muted {
+  color: #888;
+  font-size: 14px;
+  margin-bottom: 20px;
+}
+
+.modal-text--small {
+  color: #888;
+  font-size: 13px;
+}
+
+.modal-text--highlight {
+  color: var(--white);
+}
+
+.modal-text--accent {
+  color: var(--pink);
+}
+
+/* Intro modal specific */
+.intro-image {
+  width: 400px;
+  height: auto;
+  image-rendering: pixelated;
+}
+
+.intro-button {
+  margin-top: 10px;
+  padding: 10px 30px;
+  font-size: 16px;
+  cursor: pointer;
+  background: #0f00ff;
+  color: #ff6fb8;
+  border: none;
+  border-radius: 4px;
+}
+
+/* Registration modal form */
+.form-group {
+  text-align: left;
+  margin-bottom: 15px;
+}
+
+.form-group--checkbox {
+  margin-top: 20px;
+  margin-bottom: 20px;
+}
+
+.form-label {
+  color: var(--white);
+  font-size: 14px;
+  display: block;
+  margin-bottom: 5px;
+}
+
+.checkbox-label {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  cursor: pointer;
+  color: var(--white);
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+.form-checkbox {
+  width: 18px;
+  height: 18px;
+  min-width: 18px;
+  margin-top: 2px;
+  accent-color: var(--pink);
+  cursor: pointer;
+}
+
+.checkbox-text {
+  color: #aaa;
+}
+
+.form-input {
+  width: 100%;
+  padding: 12px;
+  background: var(--black);
+  border: 1px solid #555;
+  color: var(--white);
+  font-family: 'Courier New', monospace;
+  font-size: 14px;
+  box-sizing: border-box;
+}
+
+.form-input:focus {
+  outline: none;
+  border-color: var(--pink);
+}
+
+.form-input--username {
+  font-size: 18px;
+  text-align: center;
+  letter-spacing: 0.5em;
+  text-transform: uppercase;
+}
+
+.form-error {
+  color: #ff4444;
+  min-height: 20px;
+  margin-bottom: 10px;
+  font-size: 13px;
+}
+
+/* Modal buttons */
+.modal-btn {
+  width: 100%;
+  padding: 12px;
+  border: none;
+  cursor: pointer;
+  font-family: 'Courier New', monospace;
+  font-size: 14px;
+  margin-bottom: 10px;
+}
+
+.modal-btn--primary {
+  background: var(--pink);
+  color: var(--white);
+  font-weight: bold;
+}
+
+.modal-btn--secondary {
+  background: transparent;
+  border: 1px solid var(--pink);
+  color: var(--pink);
+  font-size: 13px;
+}
+
+.modal-btn--tertiary {
+  background: transparent;
+  border: 1px solid #555;
+  color: #888;
+  font-size: 13px;
+}
+
+.modal-btn--inline {
+  width: auto;
+  margin-top: 20px;
+  padding: 12px 30px;
+}
+
+.modal-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+#password-input {
+  width: 100%;
+  padding: 0.75rem;
+  margin: 1rem 0;
+  background: var(--black);
+  border: 1px solid #555;
+  color: var(--white);
+  font-family: 'Courier New', monospace;
+  font-size: 1rem;
+}
+
+#password-input:focus {
+  outline: none;
+  border-color: var(--pink);
+}
+
+#password-submit {
+  width: 100%;
+  padding: 0.75rem;
+  background: var(--pink);
+  border: none;
+  color: var(--white);
+  font-weight: bold;
+  cursor: pointer;
+  font-family: 'Courier New', monospace;
+  font-size: 1rem;
+}
+
+#password-submit:hover {
+  background: #ff6fb8;
+}
+
+#password-error {
+  color: #ff4444;
+  margin-top: 0.5rem;
+  min-height: 1.5rem;
+  font-family: 'Courier New', monospace;
+}
