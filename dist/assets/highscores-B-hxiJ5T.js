@@ -1,6 +1,0 @@
-import"./modulepreload-polyfill-B5Qt9EMX.js";import{c as u,h as l,d as h,s as i}from"./player-session-Cwuz5rDI.js";u();const a=document.getElementById("leaderboard-list"),p=document.getElementById("player-status"),y=document.getElementById("player-name"),g=document.getElementById("player-score");function f(e){e&&(p.style.display="block",y.textContent=e.username,g.textContent=`Score: ${e.score.toLocaleString()}`)}const r=l();r&&f(r);function b(e){if(a.innerHTML="",!e||e.length===0){a.innerHTML='<p class="leaderboard-empty">No scores yet. Be the first to play!</p>';return}const c=l();e.forEach((t,s)=>{const o=document.createElement("div");o.className="highscore-entry";const d=c&&t.username===c.username;let n="";s===0?n="🥇":s===1?n="🥈":s===2&&(n="🥉");const m=d?"highscore-code highscore-code--current":"highscore-code";o.innerHTML=`
-      <span class="highscore-rank">${n||"#"+(s+1)}</span>
-      <span class="${m}">${t.username}</span>
-      <span class="highscore-level">Lv.${t.current_level||"?"}</span>
-      <span class="highscore-score">${t.score.toLocaleString()}</span>
-    `,a.appendChild(o)})}const L=h(b);document.getElementById("home-btn-highscore").onclick=()=>{i(),window.location.href="/index.html"};document.getElementById("play-again-btn").onclick=()=>{i(),window.location.href="/play.html?level=1"};window.addEventListener("beforeunload",()=>{L()});
