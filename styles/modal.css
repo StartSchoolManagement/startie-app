@@ -268,3 +268,37 @@
   min-height: 1.5rem;
   font-family: 'Courier New', monospace;
 }
+
+/* Small phone adjustments */
+@media (max-height: 700px) {
+  .modal-body {
+    padding: 10px;
+  }
+
+  .modal-title {
+    margin-bottom: 8px;
+    font-size: 1.3rem;
+  }
+
+  .modal-text--muted {
+    margin-bottom: 12px;
+    font-size: 13px;
+  }
+
+  .form-group {
+    margin-bottom: 10px;
+  }
+
+  .form-group--checkbox {
+    margin-top: 12px;
+    margin-bottom: 12px;
+  }
+
+  .form-input {
+    padding: 10px;
+  }
+
+  .modal-btn {
+    padding: 10px;
+  }
+}

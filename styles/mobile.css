@@ -197,9 +197,13 @@
 
   .modal-content {
     width: 95%;
-    margin: 10% auto;
+    margin: 3% auto;
     padding: 1.5rem;
     max-width: 90vw;
+    max-height: 90vh;
+    max-height: 90dvh;
+    overflow-y: auto;
+    padding-bottom: calc(1.5rem + env(safe-area-inset-bottom, 0px));
   }
 
   /* Intro modal image - responsive and always centered */
