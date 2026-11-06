@@ -1,0 +1,196 @@
+/* Big-screen live leaderboard (live.html)
+   Sized in viewport units so it fills any projector or TV. */
+
+.live-page {
+  padding: 2vh 4vw 2.5vh;
+  gap: 2vh;
+}
+
+/* Header: banner left, live indicator right */
+.live-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex: 0 0 auto;
+}
+
+.live-banner {
+  height: 11vh;
+  width: auto;
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+}
+
+.live-status {
+  display: flex;
+  align-items: center;
+  gap: 0.6em;
+  font-size: 2.4vh;
+  color: #888;
+}
+
+.live-status::before {
+  content: '';
+  width: 1.3vh;
+  height: 1.3vh;
+  border-radius: 50%;
+  background: #555;
+}
+
+.live-status.is-live {
+  color: var(--white);
+}
+
+.live-status.is-live::before {
+  background: var(--pink);
+  box-shadow: 0 0 1.4vh var(--pink);
+  animation: live-pulse 1.6s ease-in-out infinite;
+}
+
+@keyframes live-pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50%      { opacity: 0.35; transform: scale(0.65); }
+}
+
+/* Board: rows are absolutely positioned and slide to their rank */
+.live-main {
+  flex: 1 1 auto;
+  position: relative;
+  min-height: 0;
+}
+
+.board {
+  --rows: 10;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  position: absolute;
+  inset: 0;
+}
+
+.row {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  height: calc(100% / var(--rows));
+  transform: translateY(calc(var(--i) * 100%));
+  transition: transform 0.6s cubic-bezier(0.2, 0.8, 0.2, 1), opacity 0.4s ease;
+  display: grid;
+  grid-template-columns: 3ch 5ch 1fr 9ch 6ch;
+  align-items: center;
+  column-gap: 2vw;
+  padding: 0 1.5vw;
+  font-size: min(5vh, 4vw);
+  line-height: 1;
+  border-radius: 0.4vh;
+}
+
+.row.is-entering,
+.row.is-leaving {
+  opacity: 0;
+}
+
+.row-rank {
+  color: #888;
+  text-align: right;
+}
+
+.row.is-top .row-rank {
+  color: var(--pink);
+}
+
+.row-user {
+  font-weight: bold;
+  letter-spacing: 0.06em;
+}
+
+.row-bar {
+  position: relative;
+  height: 38%;
+  background: var(--dark-gray);
+}
+
+.row-bar-fill {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: 0;
+  background: var(--blue);
+  transition: width 0.8s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.row.is-top .row-bar-fill {
+  background: var(--pink);
+}
+
+.row-score {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.row-level {
+  color: #888;
+  font-size: 0.55em;
+  text-align: right;
+}
+
+/* A score just changed: the row lights up and the number pops */
+.row.is-flash {
+  animation: row-flash 1.4s ease-out;
+}
+
+.row.is-flash .row-score {
+  animation: score-pop 1.4s ease-out;
+}
+
+@keyframes row-flash {
+  0%   { background: rgba(255, 79, 163, 0.5); }
+  100% { background: transparent; }
+}
+
+@keyframes score-pop {
+  0%   { transform: scale(1); color: var(--white); }
+  20%  { transform: scale(1.25); color: var(--pink); }
+  100% { transform: scale(1); color: var(--white); }
+}
+
+.board-empty[hidden] {
+  display: none;
+}
+
+.board-empty {
+  position: absolute;
+  inset: 0;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  color: #888;
+  font-size: 3.2vh;
+  line-height: 1.5;
+}
+
+/* Footer */
+.live-footer {
+  display: flex;
+  justify-content: space-between;
+  flex: 0 0 auto;
+  color: #888;
+  font-size: 2.4vh;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .row,
+  .row-bar-fill {
+    transition: none;
+  }
+  .live-status.is-live::before,
+  .row.is-flash,
+  .row.is-flash .row-score {
+    animation: none;
+  }
+}

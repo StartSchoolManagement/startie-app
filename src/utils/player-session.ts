@@ -1,10 +1,32 @@
 // Player session management - handles registration and score tracking
-import type { PlayerSession, PendingVerification, ScoreUpdateResult, RegistrationResult, LeaderboardEntry, RegistrationData } from '../types';
+//
+// Players never sign in to Supabase. All database writes go through two
+// SECURITY DEFINER RPCs (register_player, submit_score); the anon key can
+// only read the leaderboard columns.
+import type { PlayerSession, ScoreUpdateResult, RegistrationResult, LeaderboardEntry, RegistrationData } from '../types';
 import { getSupabaseClient } from './supabase';
 
 const SESSION_KEY = 'logicrun_player';
-const PENDING_VERIFICATION_KEY = 'logicrun_pending_verification';
 const LEVEL_SCORES_KEY = 'logicrun_level_scores';
+const LOCAL_SCORE_KEY = 'local_score';
+const LOCAL_LEVEL_KEY = 'local_level';
+
+interface RegisterPlayerRow {
+  id: string;
+  name: string;
+  email: string;
+  username: string;
+  consent: boolean;
+  verified: boolean;
+  score: number;
+  level: number;
+  is_new: boolean;
+}
+
+interface SubmitScoreRow {
+  score: number;
+  level: number;
+}
 
 /**
  * Get current player session from localStorage
@@ -22,14 +44,13 @@ export function savePlayerSession(session: PlayerSession): void {
 }
 
 /**
- * Clear player session
+ * Clear player session and all per-player local progress
  */
 export function clearPlayerSession(): void {
   localStorage.removeItem(SESSION_KEY);
-  localStorage.removeItem(PENDING_VERIFICATION_KEY);
   localStorage.removeItem(LEVEL_SCORES_KEY);
-  localStorage.removeItem('local_score');
-  localStorage.removeItem('local_level');
+  localStorage.removeItem(LOCAL_SCORE_KEY);
+  localStorage.removeItem(LOCAL_LEVEL_KEY);
 }
 
 /**
@@ -41,64 +62,12 @@ export function isPlayerRegistered(): boolean {
 }
 
 /**
- * Sign in an existing verified player by email
- * Checks database for verified player and restores their session
- */
-export async function signInExistingPlayer(email: string): Promise<{ success: boolean; player?: PlayerSession; error?: string }> {
-  const supabase = getSupabaseClient();
-  if (!supabase) {
-    return { success: false, error: 'Database not available' };
-  }
-
-  try {
-    // Check if user exists with this email
-    const { data: userData, error: userError } = await supabase
-      .from('users')
-      .select('*')
-      .eq('email', email.toLowerCase())
-      .single();
-
-    if (userError || !userData) {
-      return { success: false, error: 'No account found with this email' };
-    }
-
-    // Get their current score if any
-    const { data: scoreData } = await supabase
-      .from('scores')
-      .select('score, current_level')
-      .eq('user_id', userData.id)
-      .order('score', { ascending: false })
-      .limit(1)
-      .single();
-
-    // Restore session locally
-    const session: PlayerSession = {
-      id: userData.id,
-      name: userData.name,
-      email: userData.email,
-      username: userData.username,
-      score: scoreData?.score || 0,
-      level: scoreData?.current_level || userData.current_level || 1,
-      verified: userData.verified,
-      consent: userData.consent
-    };
-    savePlayerSession(session);
-    
-    // Clear any stale level scores from localStorage to avoid conflicts
-    localStorage.removeItem(LEVEL_SCORES_KEY);
-
-    return { success: true, player: session };
-  } catch (error) {
-    return { success: false, error: (error as Error).message };
-  }
-}
-
-/**
- * Register a new player - saves directly to database (no verification required)
+ * Register a new player, or recognise a returning one by email.
+ * Goes through the register_player RPC so the anon key never touches the users table.
  */
 export async function registerPlayer(data: RegistrationData): Promise<RegistrationResult> {
   const { name, email, username, consent } = data;
-  
+
   if (!name || !email || !username) {
     return { success: false, error: 'Name, email, and username are required' };
   }
@@ -107,131 +76,82 @@ export async function registerPlayer(data: RegistrationData): Promise<Registrati
     return { success: false, error: 'Username must be exactly 3 alphanumeric characters' };
   }
 
+  // Progress stored on this browser before registering. On a shared event
+  // laptop this belongs to whoever played last, so it is only carried over
+  // when nobody else was signed in here.
+  const previousSession = getPlayerSession();
+  const levelScores = previousSession ? {} : getLevelScores();
+  const localTotalScore = calculateTotalScore(levelScores);
+  const localHighestLevel = highestLevel(levelScores);
+
   const supabase = getSupabaseClient();
-  
-  if (supabase) {
-    // Check if username is already taken by a different email
-    const { data: existingUsername } = await supabase
-      .from('users')
-      .select('username, email')
-      .eq('username', username.toUpperCase())
-      .single();
 
-    if (existingUsername && existingUsername.email !== email.toLowerCase()) {
-      return { success: false, error: 'Username already taken. Choose another.' };
-    }
-
-    // Check if email already exists (returning player)
-    const { data: existingUser } = await supabase
-      .from('users')
-      .select('*')
-      .eq('email', email.toLowerCase())
-      .single();
-
-    if (existingUser) {
-      // Returning player - get their current score
-      const { data: scoreData } = await supabase
-        .from('scores')
-        .select('score, current_level')
-        .eq('user_id', existingUser.id)
-        .order('score', { ascending: false })
-        .limit(1)
-        .single();
-
-      // Update consent if changed
-      if (existingUser.consent !== consent) {
-        await supabase
-          .from('users')
-          .update({ consent, updated_at: new Date().toISOString() })
-          .eq('id', existingUser.id);
-      }
-
-      const session: PlayerSession = {
-        id: existingUser.id,
-        name: existingUser.name,
-        email: existingUser.email,
-        username: existingUser.username,
-        score: scoreData?.score || 0,
-        level: scoreData?.current_level || existingUser.current_level || 1,
-        verified: true,
-        consent: consent
-      };
-      savePlayerSession(session);
-      return { success: true, player: session };
-    }
+  if (!supabase) {
+    // Offline mode - save locally only
+    saveLevelScores(levelScores);
+    const session: PlayerSession = {
+      name: name.trim(),
+      email: email.toLowerCase(),
+      username: username.toUpperCase(),
+      score: localTotalScore,
+      level: localHighestLevel,
+      verified: true,
+      consent
+    };
+    savePlayerSession(session);
+    return { success: true, player: session };
   }
 
-  // Get any local scores to include
-  const levelScoresData = localStorage.getItem(LEVEL_SCORES_KEY);
-  const levelScores: Record<string, number> = levelScoresData ? JSON.parse(levelScoresData) : {};
-  const totalScore = Object.values(levelScores).reduce((sum, score) => sum + score, 0);
-  const highestLevel = Object.keys(levelScores).length > 0 
-    ? Math.max(...Object.keys(levelScores).map(Number)) 
-    : 1;
+  try {
+    const { data: row, error } = await supabase.rpc('register_player', {
+      p_name: name.trim(),
+      p_email: email.toLowerCase(),
+      p_username: username.toUpperCase(),
+      p_consent: consent
+    });
 
-  if (supabase) {
-    try {
-      // Create new user in database
-      const { data: newUser, error: userError } = await supabase
-        .from('users')
-        .insert({
-          name: name.trim(),
-          email: email.toLowerCase(),
-          username: username.toUpperCase(),
-          consent: consent,
-          verified: true,
-          current_level: highestLevel
-        })
-        .select()
-        .single();
-
-      if (userError) {
-        return { success: false, error: userError.message };
-      }
-
-      // Create initial score entry if there's a local score
-      if (totalScore > 0) {
-        await supabase
-          .from('scores')
-          .insert({
-            user_id: newUser.id,
-            score: totalScore,
-            current_level: highestLevel
-          });
-      }
-
-      // Save session locally
-      const session: PlayerSession = {
-        id: newUser.id,
-        name: newUser.name,
-        email: newUser.email,
-        username: newUser.username,
-        score: totalScore,
-        level: highestLevel,
-        verified: true,
-        consent: newUser.consent
-      };
-      savePlayerSession(session);
-
-      return { success: true, player: session };
-    } catch (error) {
-      return { success: false, error: (error as Error).message };
+    if (error) {
+      return { success: false, error: error.message };
     }
+
+    const player = row as RegisterPlayerRow;
+    let score = player.score;
+    let level = player.level;
+
+    // Reset per-level bests unless this is the same player continuing.
+    if (!previousSession || previousSession.id !== player.id) {
+      saveLevelScores(levelScores);
+    }
+
+    // Brand-new player who already cleared levels on this browser: record it.
+    if (player.is_new && localTotalScore > 0) {
+      const { data: submitted } = await supabase.rpc('submit_score', {
+        p_user_id: player.id,
+        p_score: localTotalScore,
+        p_level: localHighestLevel
+      });
+      if (submitted) {
+        score = (submitted as SubmitScoreRow).score;
+        level = (submitted as SubmitScoreRow).level;
+      }
+    }
+
+    const session: PlayerSession = {
+      id: player.id,
+      name: player.name,
+      email: player.email,
+      username: player.username,
+      score,
+      level,
+      verified: player.verified,
+      consent: player.consent
+    };
+    savePlayerSession(session);
+
+    return { success: true, player: session };
+  } catch (error) {
+    return { success: false, error: (error as Error).message };
   }
-
-  // Offline mode - save locally only
-  const session: PlayerSession = {
-    name: name.trim(),
-    email: email.toLowerCase(),
-    username: username.toUpperCase(),
-    score: totalScore,
-    level: highestLevel,
-    verified: true,
-    consent: consent
-  };
-  savePlayerSession(session);
-
-  return { success: true, player: session };
 }
 
 /**
@@ -256,6 +176,11 @@ function calculateTotalScore(levelScores: Record<number, number>): number {
   return Object.values(levelScores).reduce((sum, score) => sum + score, 0);
 }
 
+function highestLevel(levelScores: Record<number, number>): number {
+  const keys = Object.keys(levelScores).map(Number);
+  return keys.length > 0 ? Math.max(...keys) : 1;
+}
+
 /**
  * Update player's score after completing a level
  * Only updates if the new score is better than previous best for that level
@@ -264,122 +189,66 @@ export async function updatePlayerScore(levelScore: number, levelNumber: number)
   // Get current best scores per level from localStorage
   const levelScores = getLevelScores();
   const previousBest = levelScores[levelNumber] || 0;
-  
+
   // Check if this is an improvement for this level
   if (levelScore <= previousBest) {
-    // No improvement, return current total
     const session = getPlayerSession();
     const currentTotal = session ? session.score : calculateTotalScore(levelScores);
-    return { 
-      success: true, 
-      newScore: currentTotal, 
-      improved: false 
-    };
+    return { success: true, newScore: currentTotal, improved: false };
   }
-  
+
   // Update best score for this level in localStorage
   levelScores[levelNumber] = levelScore;
   saveLevelScores(levelScores);
-  
-  // Calculate total from localStorage level scores
+
   const localTotalScore = calculateTotalScore(levelScores);
-  
+
   const session = getPlayerSession();
   if (!session) {
     // Player not registered, store locally for now
-    localStorage.setItem('local_score', localTotalScore.toString());
-    localStorage.setItem('local_level', levelNumber.toString());
+    localStorage.setItem(LOCAL_SCORE_KEY, localTotalScore.toString());
+    localStorage.setItem(LOCAL_LEVEL_KEY, levelNumber.toString());
     return { success: true, newScore: localTotalScore, improved: true };
   }
 
-  // For registered players, use the HIGHER of:
-  // - Their current database score
-  // - Their localStorage total (sum of best per level)
-  // This ensures score never goes down and properly handles returning players
+  // Never let the score go down: take the higher of the stored total and the local sum.
   const newTotalScore = Math.max(session.score || 0, localTotalScore);
+  const newLevel = Math.max(session.level || 1, levelNumber);
 
   const supabase = getSupabaseClient();
-  if (!supabase) {
-    // Offline mode - update local session
+  if (!supabase || !session.id) {
+    // Offline session - update locally only
     session.score = newTotalScore;
-    session.level = Math.max(session.level || 1, levelNumber);
+    session.level = newLevel;
     savePlayerSession(session);
     return { success: true, newScore: newTotalScore, improved: true };
   }
 
   try {
-    // Check if user has an existing score entry
-    const { data: existingScore } = await supabase
-      .from('scores')
-      .select('id, score')
-      .eq('user_id', session.id)
-      .order('score', { ascending: false })
-      .limit(1)
-      .single();
+    const { data, error } = await supabase.rpc('submit_score', {
+      p_user_id: session.id,
+      p_score: newTotalScore,
+      p_level: newLevel
+    });
 
-    if (existingScore) {
-      // Update existing score entry
-      const { data, error } = await supabase
-        .from('scores')
-        .update({
-          score: newTotalScore,
-          current_level: Math.max(session.level || 1, levelNumber),
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', existingScore.id)
-        .select()
-        .single();
-
-      if (error) {
-        console.error('Supabase update error:', error);
-        session.score = newTotalScore;
-        session.level = Math.max(session.level || 1, levelNumber);
-        savePlayerSession(session);
-        return { success: true, newScore: newTotalScore, improved: true };
-      }
-
-      // Update local session
-      session.score = data.score;
-      session.level = data.current_level;
+    if (error) {
+      console.error('Supabase submit_score error:', error);
+      session.score = newTotalScore;
+      session.level = newLevel;
       savePlayerSession(session);
-
-      return { success: true, newScore: data.score, improved: true };
-    } else {
-      // Create new score entry
-      const { data, error } = await supabase
-        .from('scores')
-        .insert({
-          user_id: session.id,
-          score: newTotalScore,
-          current_level: Math.max(session.level || 1, levelNumber)
-        })
-        .select()
-        .single();
-
-      if (error) {
-        console.error('Supabase insert error:', error);
-        session.score = newTotalScore;
-        session.level = Math.max(session.level || 1, levelNumber);
-        savePlayerSession(session);
-        return { success: true, newScore: newTotalScore, improved: true };
-      }
-
-      // Update user's current_level in users table
-      await supabase
-        .from('users')
-        .update({ current_level: Math.max(session.level || 1, levelNumber) })
-        .eq('id', session.id);
-
-      session.score = data.score;
-      session.level = data.current_level;
-      savePlayerSession(session);
-
-      return { success: true, newScore: data.score, improved: true };
+      return { success: true, newScore: newTotalScore, improved: true };
     }
+
+    const result = data as SubmitScoreRow;
+    session.score = result.score;
+    session.level = result.level;
+    savePlayerSession(session);
+
+    return { success: true, newScore: result.score, improved: true };
   } catch (error) {
     console.error('Error updating score:', error);
     session.score = newTotalScore;
-    session.level = Math.max(session.level || 1, levelNumber);
+    session.level = newLevel;
     savePlayerSession(session);
     return { success: true, newScore: newTotalScore, improved: true };
   }
@@ -431,7 +300,6 @@ export async function fetchLeaderboard(): Promise<LeaderboardEntry[]> {
   }
 
   try {
-    // Query using the leaderboard_view or manual join
     const { data, error } = await supabase
       .from('scores')
       .select(`
@@ -439,8 +307,7 @@ export async function fetchLeaderboard(): Promise<LeaderboardEntry[]> {
         current_level,
         updated_at,
         users!inner (
-          username,
-          name
+          username
         )
       `)
       .gt('score', 0)
@@ -454,7 +321,6 @@ export async function fetchLeaderboard(): Promise<LeaderboardEntry[]> {
 
     return (data || []).map((entry: any) => ({
       username: entry.users?.username,
-      name: entry.users?.name,
       score: entry.score,
       current_level: entry.current_level,
       updated_at: entry.updated_at
@@ -466,31 +332,16 @@ export async function fetchLeaderboard(): Promise<LeaderboardEntry[]> {
 }
 
 /**
- * Check if there's a pending verification to complete
- */
-export function hasPendingVerification(): boolean {
-  return localStorage.getItem(PENDING_VERIFICATION_KEY) !== null;
-}
-
-/**
- * Get pending verification data
- */
-export function getPendingVerification(): PendingVerification | null {
-  const data = localStorage.getItem(PENDING_VERIFICATION_KEY);
-  return data ? JSON.parse(data) : null;
-}
-
-/**
  * Get local score (for unregistered players)
  */
 export function getLocalScore(): number {
-  return parseInt(localStorage.getItem('local_score') || '0', 10);
+  return parseInt(localStorage.getItem(LOCAL_SCORE_KEY) || '0', 10);
 }
 
 /**
  * Clear local score
  */
 export function clearLocalScore(): void {
-  localStorage.removeItem('local_score');
-  localStorage.removeItem('local_level');
+  localStorage.removeItem(LOCAL_SCORE_KEY);
+  localStorage.removeItem(LOCAL_LEVEL_KEY);
 }

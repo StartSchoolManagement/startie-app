@@ -12,6 +12,7 @@ export default defineConfig({
         play: resolve(__dirname, "play.html"),
         highscores: resolve(__dirname, "highscores.html"),
         admin: resolve(__dirname, "admin.html"),
+        live: resolve(__dirname, "live.html"),
       },
     },
   },

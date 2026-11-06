@@ -121,16 +121,6 @@ export function createIntroModal(levelNumber: number, onClose: (() => void) | nu
 }
 
 /**
- * Registration data interface
- */
-export interface RegistrationData {
-  name: string;
-  username: string;
-  email: string;
-  consent: boolean;
-}
-
-/**
  * Create registration modal for capturing user data after level 1
  */
 export function createRegistrationModal(onRegister: (data: RegistrationData) => Promise<RegistrationResult>): ModalController {

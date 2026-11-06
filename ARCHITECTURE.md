@@ -202,11 +202,11 @@ export const level1: Level = {
 ## Scoring
 
 ```
-Score = 1000 - (commandCount × 100)
+Score = 1000 - (commandCount × 50)
 Minimum = 100
 ```
 
-- Each command costs 100 points
+- Each command costs 50 points (a `while` loop line itself is free)
 - Best score per level is tracked
 - Total score = sum of best scores
 
@@ -313,3 +313,4 @@ Automatic deployment to Vercel on push to main.
 | Level 1 | `/play.html?password=MVE` |
 | By number | `/play.html?level=1` |
 | Leaderboard | `/highscores.html` |
+| Big-screen live board | `/live.html` (`?top=15` for more rows) |
