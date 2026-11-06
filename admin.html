@@ -272,6 +272,7 @@
             <th data-sort="username">Username</th>
             <th data-sort="email">Email</th>
             <th data-sort="consent">Consent</th>
+            <th data-sort="consent_at">Consented at</th>
             <th data-sort="created_at">Registered</th>
           </tr>
         </thead>
@@ -452,9 +453,9 @@
       filtered.sort((a, b) => {
         let aVal = a[sortCol];
         let bVal = b[sortCol];
-        if (sortCol === 'created_at') {
-          aVal = new Date(aVal).getTime();
-          bVal = new Date(bVal).getTime();
+        if (sortCol === 'created_at' || sortCol === 'consent_at') {
+          aVal = aVal ? new Date(aVal).getTime() : 0;
+          bVal = bVal ? new Date(bVal).getTime() : 0;
         }
         if (aVal < bVal) return sortAsc ? -1 : 1;
         if (aVal > bVal) return sortAsc ? 1 : -1;
@@ -473,6 +474,7 @@
           <td>${u.username}</td>
           <td>${u.email || '-'}</td>
           <td class="${u.consent ? 'consent-yes' : 'consent-no'}">${u.consent ? '✓ Yes' : '✗ No'}</td>
+          <td>${u.consent_at ? new Date(u.consent_at).toLocaleString() : '—'}</td>
           <td>${new Date(u.created_at).toLocaleString()}</td>
         </tr>
       `).join('');
@@ -577,12 +579,13 @@
 
     // Export users to CSV
     function exportUsersCSV() {
-      const headers = ['Name', 'Username', 'Email', 'Consent', 'Registered'];
+      const headers = ['Name', 'Username', 'Email', 'Consent', 'Consented At', 'Registered'];
       const rows = usersData.map(u => [
         u.name || '',
         u.username,
         u.email || '',
         u.consent ? 'Yes' : 'No',
+        u.consent_at ? new Date(u.consent_at).toISOString() : '',
         new Date(u.created_at).toISOString()
       ]);
 

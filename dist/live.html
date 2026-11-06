@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Logic Run – Live Leaderboard</title>
+  <script type="module" crossorigin src="/assets/live-DLkXKynw.js"></script>
+  <link rel="modulepreload" crossorigin href="/assets/modulepreload-polyfill-B5Qt9EMX.js">
+  <link rel="modulepreload" crossorigin href="/assets/player-session-DjdSeYKW.js">
+  <link rel="stylesheet" crossorigin href="/assets/live-Cm6vJOAp.css">
+</head>
+<body class="live-page">
+
+  <header class="live-header">
+    <img src="/top-banner.png" alt="StartSchool Logic Run" class="live-banner">
+    <div id="status" class="live-status">Connecting</div>
+  </header>
+
+  <main class="live-main">
+    <ol id="board" class="board" aria-live="polite"></ol>
+    <p id="empty" class="board-empty" hidden>
+      No scores yet.<br>The first player to finish a level appears here.
+    </p>
+  </main>
+
+  <footer class="live-footer">
+    <span id="players"></span>
+    <span id="last">Waiting for the first score</span>
+  </footer>
+
+</body>
+</html>
