@@ -8,8 +8,11 @@ import { initSupabase, getSupabaseClient } from './utils/supabase';
 import { fetchLeaderboard } from './utils/player-session';
 
 const params = new URLSearchParams(window.location.search);
-const requestedTop = parseInt(params.get('top') || '10', 10);
-const TOP = Math.min(20, Math.max(3, Number.isNaN(requestedTop) ? 10 : requestedTop));
+const requestedTop = parseInt(params.get('top') || '30', 10);
+const TOP = Math.min(100, Math.max(3, Number.isNaN(requestedTop) ? 30 : requestedTop));
+// Rows per column: one column reads best up to a dozen, then split.
+const COLS = TOP <= 12 ? 1 : TOP <= 30 ? 2 : 3;
+const PER_COL = Math.ceil(TOP / COLS);
 const SAFETY_REFRESH_MS = 30_000;
 const COUNT_UP_MS = 700;
 const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -41,7 +44,8 @@ function formatScore(n: number): string {
 function createRow(username: string): BoardRow {
   const el = document.createElement('li');
   el.className = 'row is-entering';
-  el.style.setProperty('--i', String(TOP));
+  el.style.setProperty('--i', String(PER_COL));
+  el.style.setProperty('--col', String(COLS - 1));
   const span = (className: string, text = ''): HTMLSpanElement => {
     const s = document.createElement('span');
     s.className = className;
@@ -85,7 +89,6 @@ function flash(row: BoardRow): void {
 
 function render(entries: LeaderboardEntry[]): void {
   const top = entries.filter(e => !!e.username).slice(0, TOP);
-  boardEl.style.setProperty('--rows', String(TOP));
   emptyEl.hidden = top.length > 0;
 
   const leaderScore = top[0]?.score || 1;
@@ -136,7 +139,7 @@ function render(entries: LeaderboardEntry[]): void {
     if (seen.has(key)) continue;
     rows.delete(key);
     row.el.classList.add('is-leaving');
-    row.el.style.setProperty('--i', String(TOP));
+    row.el.style.setProperty('--i', String(PER_COL));
     window.setTimeout(() => row.el.remove(), 600);
   }
 
@@ -146,8 +149,18 @@ function render(entries: LeaderboardEntry[]): void {
 
 function positionRows(top: LeaderboardEntry[]): void {
   top.forEach((entry, index) => {
-    rows.get(entry.username as string)?.el.style.setProperty('--i', String(index));
+    const el = rows.get(entry.username as string)?.el;
+    if (!el) return;
+    el.style.setProperty('--col', String(Math.floor(index / PER_COL)));
+    el.style.setProperty('--i', String(index % PER_COL));
   });
+}
+
+function sizeBoard(): void {
+  boardEl.style.setProperty('--rows', String(PER_COL));
+  boardEl.style.setProperty('--cols', String(COLS));
+  boardEl.style.setProperty('--row-px', `${boardEl.clientHeight / PER_COL}px`);
+  boardEl.classList.toggle('is-compact', COLS > 1);
 }
 
 async function refreshPlayerCount(): Promise<void> {
@@ -181,11 +194,48 @@ function setConnection(live: boolean, label: string): void {
 }
 
 async function refresh(): Promise<void> {
-  const [entries] = await Promise.all([fetchLeaderboard(), refreshPlayerCount()]);
+  const [entries] = await Promise.all([fetchLeaderboard(TOP), refreshPlayerCount()]);
   render(entries);
 }
 
+// ?demo=1 fills the board with sample players and keeps them moving, so staff
+// can check the stage screen before the event without real scores.
+function startDemo(): void {
+  const names = ['ASF', 'RK7', 'ELA', 'OKI', 'DAN', 'BLO', '999', 'RK1', 'LII', 'FCK',
+    'MAX', 'ZOE', 'TOM', 'ANA', 'LEO', 'EVA', 'NIK', 'IVO', 'KAT', 'JAN',
+    'ULA', 'RAJ', 'MIA', 'BEN', 'INA', 'OTO', 'PIA', 'ROB', 'SAM', 'TEO',
+    'UGO', 'VIK', 'WIM', 'XIA', 'YAN', 'ZAK'];
+  const demo: LeaderboardEntry[] = names.slice(0, TOP + 2).map((username, i) => ({
+    username,
+    score: 7800 - i * 190,
+    current_level: Math.max(1, 10 - Math.floor(i / 4)),
+    updated_at: new Date().toISOString()
+  }));
+  const paint = (): void => {
+    demo.sort((a, b) => b.score - a.score);
+    render(demo.map(e => ({ ...e })));
+    playersEl.textContent = `${demo.length} players`;
+  };
+  sizeBoard();
+  window.addEventListener('resize', sizeBoard);
+  setConnection(true, 'Demo');
+  paint();
+  window.setInterval(() => {
+    const pick = demo[Math.floor(Math.random() * demo.length)];
+    pick.score = Math.min(10000, pick.score + 250 + Math.floor(Math.random() * 600));
+    pick.updated_at = new Date().toISOString();
+    lastScoreAt = Date.now();
+    paint();
+  }, 3000);
+  window.setInterval(updateLastScoreLabel, 1000);
+}
+
 function start(): void {
+  if (params.get('demo') === '1') {
+    startDemo();
+    return;
+  }
+
   const supabase = initSupabase();
   if (!supabase) {
     setConnection(false, 'Not connected');
@@ -194,6 +244,8 @@ function start(): void {
     return;
   }
 
+  sizeBoard();
+  window.addEventListener('resize', sizeBoard);
   refresh();
 
   supabase

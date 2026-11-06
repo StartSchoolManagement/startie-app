@@ -316,7 +316,7 @@ export function subscribeToLeaderboard(callback: (leaderboard: LeaderboardEntry[
 /**
  * Fetch current leaderboard (joins users and scores)
  */
-export async function fetchLeaderboard(): Promise<LeaderboardEntry[]> {
+export async function fetchLeaderboard(limit = 20): Promise<LeaderboardEntry[]> {
   const supabase = getSupabaseClient();
   if (!supabase) {
     return [];
@@ -335,7 +335,7 @@ export async function fetchLeaderboard(): Promise<LeaderboardEntry[]> {
       `)
       .gt('score', 0)
       .order('score', { ascending: false })
-      .limit(20);
+      .limit(limit);
 
     if (error) {
       console.error('Error fetching leaderboard:', error);

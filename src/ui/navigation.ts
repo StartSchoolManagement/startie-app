@@ -2,6 +2,7 @@
 import type { LevelEntry } from '../types';
 import { saveMusicPosition } from '../utils/sounds';
 import { levels } from '../levels/index';
+import { clearPlayerSession } from '../utils/player-session';
 
 export function initNavigation(levelInfo: LevelEntry): void {
   const homeBtn = document.getElementById('home-btn');
@@ -12,6 +13,8 @@ export function initNavigation(levelInfo: LevelEntry): void {
   // Home buttons
   if (homeBtn) {
     homeBtn.onclick = () => {
+      // Home means the laptop is being handed over: forget the current player.
+      clearPlayerSession();
       saveMusicPosition();
       window.location.href = '/index.html';
     };
@@ -19,6 +22,8 @@ export function initNavigation(levelInfo: LevelEntry): void {
   
   if (mobileHomeBtn) {
     mobileHomeBtn.onclick = () => {
+      // Home means the laptop is being handed over: forget the current player.
+      clearPlayerSession();
       saveMusicPosition();
       window.location.href = '/index.html';
     };
@@ -56,6 +61,6 @@ export function navigateToNextLevel(levelInfo: LevelEntry): void {
     window.location.href = `/play.html?password=${nextPassword}`;
   } else {
     // Final level - go to highscores
-    window.location.href = '/highscores.html';
+    window.location.href = '/highscores.html?done=1';
   }
 }

@@ -8,6 +8,7 @@ import { initTerminal, getTerminalCommands } from './ui/terminal';
 import { initMobileCommands } from './ui/mobile-commands';
 import { createPasswordModal, createIntroModal, createRegistrationModal } from './ui/modals';
 import { initNavigation, navigateToNextLevel } from './ui/navigation';
+import { initHandover, refreshPlayerBar } from './ui/handover';
 import { initSupabase } from './utils/supabase';
 import { 
   isPlayerRegistered, 
@@ -83,7 +84,11 @@ async function initGame(): Promise<void> {
   const passwordModal = createPasswordModal(levels);
   
   // Create registration modal
-  const registrationModal = createRegistrationModal(registerPlayer);
+  const registrationModal = createRegistrationModal(async data => {
+    const result = await registerPlayer(data);
+    refreshPlayerBar();
+    return result;
+  });
   
   // Show intro modal on level 1, then registration if not registered
   if (levelInfo.number === 1) {
@@ -97,7 +102,8 @@ async function initGame(): Promise<void> {
   
   // Navigation
   initNavigation(levelInfo);
-  
+  initHandover();
+
   document.getElementById('password-btn')?.addEventListener('click', () => passwordModal.show());
   document.getElementById('mobile-password-btn')?.addEventListener('click', () => passwordModal.show());
   

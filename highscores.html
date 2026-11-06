@@ -50,14 +50,20 @@
 
 <script type="module">
 import { initSupabase } from '/src/utils/supabase.ts';
-import { 
-  getPlayerSession, 
+import {
+  getPlayerSession,
+  clearPlayerSession,
   subscribeToLeaderboard
 } from '/src/utils/player-session.ts';
 import { saveMusicPosition } from '/src/utils/sounds.ts';
 
 // Initialize
 initSupabase();
+
+// Arriving here after the final level: the run is over. Show the result,
+// then forget the player so the laptop is ready for the next person.
+const finished = new URLSearchParams(window.location.search).get('done') === '1';
+const RETURN_TO_START_MS = 45000;
 
 const leaderboardList = document.getElementById('leaderboard-list');
 const playerStatus = document.getElementById('player-status');
@@ -77,6 +83,14 @@ function showPlayerStatus(session) {
 const session = getPlayerSession();
 if (session) {
   showPlayerStatus(session);
+}
+if (finished) {
+  clearPlayerSession();
+  document.getElementById('play-again-btn').textContent = 'New player';
+  setTimeout(() => {
+    saveMusicPosition();
+    window.location.href = '/index.html';
+  }, RETURN_TO_START_MS);
 }
 
 // Update leaderboard display
@@ -123,6 +137,7 @@ document.getElementById('home-btn-highscore').onclick = () => {
 };
 
 document.getElementById('play-again-btn').onclick = () => {
+  if (finished) clearPlayerSession();
   saveMusicPosition();
   window.location.href = '/play.html?level=1';
 };

@@ -84,3 +84,55 @@
   font-family: 'Courier New', monospace;
   text-align: center;
 }
+
+/* Player bar: who holds the laptop, and the hand-over button */
+#player-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.4rem 0.5rem;
+  background: var(--dark-gray);
+  border: 1px solid #555;
+  font-family: 'Courier New', monospace;
+  font-size: 0.9rem;
+  color: #aaa;
+}
+
+#player-bar[hidden] {
+  display: none;
+}
+
+#player-label strong {
+  color: var(--pink);
+  letter-spacing: 0.05em;
+}
+
+.player-bar-btn {
+  background: var(--ui-gray);
+  border: 1px solid var(--pink);
+  color: var(--white);
+  cursor: pointer;
+  padding: 0.3rem 0.7rem;
+  font-size: 0.85rem;
+  font-family: 'Courier New', monospace;
+  white-space: nowrap;
+  transition: background 0.2s;
+}
+
+.player-bar-btn:hover {
+  background: var(--pink);
+}
+
+.handover-buttons {
+  display: flex;
+  gap: 0.75rem;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.handover-cancel {
+  background: var(--ui-gray);
+  border: 1px solid #777;
+  color: var(--white);
+}

@@ -313,4 +313,4 @@ Automatic deployment to Vercel on push to main.
 | Level 1 | `/play.html?password=MVE` |
 | By number | `/play.html?level=1` |
 | Leaderboard | `/highscores.html` |
-| Big-screen live board | `/live.html` (`?top=15` for more rows) |
+| Big-screen live board | `/live.html` (top 30; `?top=10` for a single big column; `?demo=1` for a rehearsal with sample players) |
