@@ -13,6 +13,7 @@ const LOCAL_LEVEL_KEY = 'local_level';
 
 interface RegisterPlayerRow {
   id: string;
+  token: string;
   name: string;
   email: string;
   username: string;
@@ -127,6 +128,7 @@ export async function registerPlayer(data: RegistrationData): Promise<Registrati
     if (player.is_new && localTotalScore > 0) {
       const { data: submitted } = await supabase.rpc('submit_score', {
         p_user_id: player.id,
+        p_token: player.token,
         p_score: localTotalScore,
         p_level: localHighestLevel
       });
@@ -138,6 +140,7 @@ export async function registerPlayer(data: RegistrationData): Promise<Registrati
 
     const session: PlayerSession = {
       id: player.id,
+      token: player.token,
       name: player.name,
       email: player.email,
       username: player.username,
@@ -225,8 +228,28 @@ export async function updatePlayerScore(levelScore: number, levelNumber: number)
   }
 
   try {
+    // Sessions created before tokens existed: re-register once to obtain one.
+    if (!session.token) {
+      const { data: reg } = await supabase.rpc('register_player', {
+        p_name: session.name,
+        p_email: session.email,
+        p_username: session.username,
+        p_consent: session.consent
+      });
+      const token = (reg as RegisterPlayerRow | null)?.token;
+      if (!token) {
+        session.score = newTotalScore;
+        session.level = newLevel;
+        savePlayerSession(session);
+        return { success: true, newScore: newTotalScore, improved: true };
+      }
+      session.token = token;
+      savePlayerSession(session);
+    }
+
     const { data, error } = await supabase.rpc('submit_score', {
       p_user_id: session.id,
+      p_token: session.token,
       p_score: newTotalScore,
       p_level: newLevel
     });

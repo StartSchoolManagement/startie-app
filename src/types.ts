@@ -162,6 +162,7 @@ export interface Animation {
 // Player session for leaderboard
 export interface PlayerSession {
   id?: string;
+  token?: string;
   name: string;
   email: string;
   username: string;
